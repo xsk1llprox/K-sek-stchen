@@ -1,0 +1,253 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+//****Funktions-Prototypen****
+int Spiel();
+int CursorSetzen(int iZeile, int iSpalte);
+int TerminalLeeren();
+
+
+
+//****Hauptprogramm****
+int main()
+{
+	while (Spiel())								/*Startet das Spiel für eine weitere Runde, bis return 0 liefert*/
+	{
+	}
+	return 0;
+}
+//****Funktion****
+int Spiel()
+{
+	//****Variablendeklaration****
+	int iDatenfeld[9][9] = {
+					{'+','-','+','-','+','-','+','-','+'},
+					{'|','0','u','0','u','0','u','0','|'},
+					{'+','u','+','u','+','u','+','u','+'},
+					{'|','0','u','0','u','0','u','0','|'},
+					{'+','u','+','u','+','u','+','u','+'},
+					{'|','0','u','0','u','0','u','0','|'},
+					{'+','u','+','u','+','u','+','u','+'},
+					{'|','0','u','0','u','0','u','0','|'},
+					{'+','-','+','-','+','-','+','-','+'},
+	};
+	int iInputZiffer, iInputBuchstabe;
+	int iOffsetZeile = 7;
+	int iOffsetSpalte = 4;
+	int iZeile, iSpalte;
+	int iAktiverSpieler = 1;
+	int iSpielersymbole[3] = { 'a','x','o' };					/*'a' füllt nur das Feld und wäre sonst Spieler0*/
+	int i;									/*einfache Zählvariable für Schleifen usw.*/
+	int ii;									/*einfache Zählvariable für Schleifen usw.*/
+	int iNochmalDran = 0;
+	int iAnzahlGesetzteStriche = 0;
+	int iPunkteSpieler1 = 0;
+	int iPunkteSpieler2 = 0;
+	int iGesamtpunkteSpieler1 = 0;
+	int iGesamtpunkteSpieler2 = 0;
+	//	int iSchonBelegt=0;
+
+
+		//****Code****
+	TerminalLeeren();
+	printf("K\x8ESEK\x8ESTCHEN\n");
+	printf("Bitte nur Grossbuchstaben verwenden und auf die richtigen Zeilen und Spalten achten!\n");
+	printf("Eingaben wie z.B. 1A, 2B, 2D, ect., sowie Doppelbelegungen sind unzulaessig!\n"); 
+	printf("Symbol Spieler1: x\n");						/*Erklärung der Symbologie*/
+	printf("Symbol Spieler2: o\n");
+	CursorSetzen(6, 0);
+	printf("    A B C D E F G   \n");
+	printf("  +---+---+---+---+ \n");
+	printf("1 |               | \n");
+	printf("2 +   +   +   +   + \n");
+	printf("3 |               | \n");
+	printf("4 +   +   +   +   + \n");
+	printf("5 |               | \n");
+	printf("6 +   +   +   +   + \n");
+	printf("7 |               | \n");
+	printf("  +---+---+---+---+ \n");
+	printf("Erst die Ziffer und dann den Buchstaben eingeben.\n");
+	printf("Beispiel: 1D<ENTER>\n");
+
+	do
+	{
+		do
+		{
+			do								/*Überprüft auf Ziffer 1...7*/
+			{								//	"
+				CursorSetzen(19, 0);						//	"
+				printf("Spieler%i ist am Zug:", iAktiverSpieler);	//	"
+				iInputZiffer = getchar();					//	"
+			}								//	"
+			while ((iInputZiffer < 49) | (iInputZiffer > 55));		//	"
+
+			do
+			{								/*Überprüft auf Buchstaben A...G*/
+				CursorSetzen(19, 0);					//	"
+				printf("Spieler%i ist am Zug:", iAktiverSpieler);	//	"
+				iInputBuchstabe = getchar();				//	"
+			}								//	"
+			while ((iInputBuchstabe < 65) | (iInputBuchstabe > 71));	//	"
+		} while (((iInputZiffer - 48 + iInputBuchstabe - 64) % 2) == 0);			/*Versuch unsinnige Eingaben zu verhindern*/
+
+		while (getchar() != '\n')					/*Puffer leeren, damit eine überlange Eingabe vom vorherigen Spieler nicht den*/
+		{									/*...nachfolgenden Spieler schadet*/
+		}
+
+		if ((iInputZiffer % 2) == 0)
+		{
+			//waagerecht
+			//in das Spielfeld einzeichnen
+			iOffsetZeile = 7;
+			iOffsetSpalte = 4;
+			iZeile = iInputZiffer - 48 + iOffsetZeile;
+			iSpalte = (iInputBuchstabe - 65) * 2 + iOffsetSpalte;
+			CursorSetzen(iZeile, iSpalte);
+			printf("---");
+			//ins Datenfeld eintragen
+			iDatenfeld[iInputZiffer - 48][iInputBuchstabe - 64] = '-';
+		}
+		else
+		{
+			//senkrecht
+			//in das Spielfeld einzeichnen
+			iOffsetZeile = 7;
+			iOffsetSpalte = 5;
+			iZeile = iInputZiffer - 48 + iOffsetZeile;
+			iSpalte = (iInputBuchstabe - 65) * 2 + iOffsetSpalte;
+			CursorSetzen(iZeile, iSpalte);
+			printf("|");
+			//ins Datenfeld eintragen
+			iDatenfeld[iInputZiffer - 48][iInputBuchstabe - 64] = '|';
+		}
+
+		iAnzahlGesetzteStriche = iAnzahlGesetzteStriche + 1;
+
+		//Auswertung Umrandung zu Kästchen
+		for (i = 1; i < 8; i = i + 2)
+		{
+			for (ii = 1; ii < 8; ii = ii + 2)
+			{
+				if (iDatenfeld[i][ii] == '0')
+				{
+					if ((iDatenfeld[i][ii + 1] == '|') & (iDatenfeld[i][ii - 1] == '|') & (iDatenfeld[i + 1][ii] == '-') & (iDatenfeld[i - 1][ii] == '-'))
+					{
+						//Spielermarke in das Spielfeld einzeichnen
+						iOffsetZeile = 7;
+						iOffsetSpalte = 3;
+						iZeile = i + iOffsetZeile;
+						iSpalte = ii * 2 + iOffsetSpalte;
+						CursorSetzen(iZeile, iSpalte);
+						printf("%c", iSpielersymbole[iAktiverSpieler]);
+						CursorSetzen(19, 0);
+						//Spielermarke in das Datenfeld eintragen
+						iDatenfeld[i][ii] = iSpielersymbole[iAktiverSpieler];
+						iNochmalDran = 1;
+					}
+				}
+			}
+		}
+
+		if (iNochmalDran == 0)
+		{
+			if (iAktiverSpieler == 1)
+			{
+				iAktiverSpieler = 2;
+			}
+			else
+			{
+				iAktiverSpieler = 1;
+			}
+		}
+
+		iNochmalDran = 0;
+	} while (iAnzahlGesetzteStriche != 24);
+
+	//Ergebnis Auszählen
+	for (i = 1; i < 8; i = i + 2)
+	{
+		for (ii = 1; ii < 8; ii = ii + 2)
+		{
+			if (iDatenfeld[i][ii] == 'x')
+			{
+				iPunkteSpieler1 = iPunkteSpieler1 + 1;
+			}
+			else if (iDatenfeld[i][ii] == 'o')
+			{
+				iPunkteSpieler2 = iPunkteSpieler2 + 1;
+			}
+		}
+	}
+
+	//Statistik ausgeben
+	CursorSetzen(19, 0);
+	if (iPunkteSpieler1 > iPunkteSpieler2)
+	{
+		printf("Spieler 1 f\x81hrt mit %d Punkt(en)", iGesamtpunkteSpieler1 + 1);
+	}
+	else (iPunkteSpieler2 > iPunkteSpieler1);
+		{
+			printf("Spieler 2 f\x81hrt mit %d Punkt(en)", iGesamtpunkteSpieler2 + 1);
+		}
+	//Gewinner ausgeben
+	CursorSetzen(20, 0);
+	if (iPunkteSpieler1 > iPunkteSpieler2)
+	{
+		printf("Spieler1 hat gewonnen!\n");
+	}
+	else if (iPunkteSpieler2 > iPunkteSpieler1)
+	{
+		printf("Spieler2 hat gewonnen!\n");
+	}
+	else
+	{
+		printf("Das Spiel endet unentschieden\n");
+	}
+
+	//Nochmal Spielen?
+	printf("Nochmal spielen? j/n<ENTER>\n");
+	do
+	{
+		iInputBuchstabe = getchar();
+	} while ((iInputBuchstabe != 'j') & (iInputBuchstabe != 'n'));
+
+	if (iInputBuchstabe == 'j')
+	{
+		return 1;
+	}
+	else if (iInputBuchstabe == 'n')
+	{
+		return 0;
+	}
+
+	/*Test*/
+	CursorSetzen(20, 1);
+	for (i = 0; i < 9; i++)
+	{
+		for (ii = 0; ii < 9; ii++)
+		{
+			printf("%c", iDatenfeld[i][ii]);
+		}
+		printf("\n");
+	}
+
+	return 0;
+}
+
+
+/*Funktion*/
+int CursorSetzen(int iZeile, int iSpalte)
+{
+	printf("\033[%d;%dH", iZeile, iSpalte);
+	return 0;
+}
+
+
+
+/*Funktion*/
+int TerminalLeeren()
+{
+	printf("\033c");
+	return 0;
+}
+
